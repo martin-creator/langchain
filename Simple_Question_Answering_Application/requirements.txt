@@ -1,0 +1,7 @@
+langchain
+Openai
+Streamlit
+tiktoken
+python-dotenv
+faiss-cpu
+```
