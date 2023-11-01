@@ -7,32 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#UI Starts here
+def getLLMResponse(query,age_option,tasktype_option):
+    llm = OpenAI(temperature=.9, model="text-davinci-003")
 
-st.set_page_config(page_title="Marketing Tool",
-                    page_icon='✅',
-                    layout='centered',
-                    initial_sidebar_state='collapsed')
-st.header("Hey, How can I help you?")
-
-form_input = st.text_area('Enter text', height=275)
-
-tasktype_option = st.selectbox(
-    'Please select the action to be performed?',
-    ('Write a sales copy', 'Create a tweet', 'Write a product description'),key=1)
-
-age_option= st.selectbox(
-    'For which age group?',
-    ('Kid', 'Adult', 'senior Citizen'),key=2)
-
-numberOfWords= st.slider('Words limit', 1, 200, 25)
-
-submit = st.button("Generate")
-
-
-llm = OpenAI(temperature=.9, model="text-davinci-003")
-
-examples = [
+    examples = [
     {
         "query": "What is a mobile?",
         "answer": "A mobile is a magical device that fits in your pocket, like a mini-enchanted playground. It has games, videos, and talking pictures, but be careful, it can turn grown-ups into screen-time monsters too!"
@@ -58,45 +36,73 @@ examples = [
         "query": "What is your fear?",
         "answer": "Sometimes I'm scared of thunderstorms and monsters under my bed. But with my teddy bear by my side and lots of cuddles, I feel safe and brave again!"
     }
-]
+    ]
 
 
-example_template = """
-Question: {query}
-Response: {answer}
-"""
+    example_template = """
+    Question: {query}
+    Response: {answer}
+    """
 
-example_prompt = PromptTemplate(
-    input_variables=["query", "answer"],
-    template=example_template
-)
-
-
-prefix = """You are a {template_ageoption}, and {template_tasktype_option}: 
-Here are some examples: 
-"""
-
-suffix = """
-Question: {template_userInput}
-Response: """
-
-example_selector = LengthBasedExampleSelector(
-    examples=examples,
-    example_prompt=example_prompt,
-    max_length=200
-)
+    example_prompt = PromptTemplate(
+        input_variables=["query", "answer"],
+        template=example_template
+    )
 
 
-new_prompt_template = FewShotPromptTemplate(
-    example_selector=example_selector,  # use example_selector instead of examples
-    example_prompt=example_prompt,
-    prefix=prefix,
-    suffix=suffix,
-    input_variables=["template_userInput","template_ageoption","template_tasktype_option"],
-    example_separator="\n"
-)
+    prefix = """You are a {template_ageoption}, and {template_tasktype_option}: 
+    Here are some examples: 
+    """
 
-query = form_input
-print(new_prompt_template.format(template_userInput=query,template_ageoption=age_option,template_tasktype_option=tasktype_option))
+    suffix = """
+    Question: {template_userInput}
+    Response: """
 
-print(llm(new_prompt_template.format(template_userInput=query,template_ageoption=age_option,template_tasktype_option=tasktype_option)))
+    example_selector = LengthBasedExampleSelector(
+        examples=examples,
+        example_prompt=example_prompt,
+        max_length=200
+    )
+
+
+    new_prompt_template = FewShotPromptTemplate(
+        example_selector=example_selector,  # use example_selector instead of examples
+        example_prompt=example_prompt,
+        prefix=prefix,
+        suffix=suffix,
+        input_variables=["template_userInput","template_ageoption","template_tasktype_option"],
+        example_separator="\n"
+    )
+
+  
+    print(new_prompt_template.format(template_userInput=query,template_ageoption=age_option,template_tasktype_option=tasktype_option))
+    response=llm(new_prompt_template.format(template_userInput=query,template_ageoption=age_option,template_tasktype_option=tasktype_option))
+    print(response)
+
+    return response
+
+#UI Starts here
+
+st.set_page_config(page_title="Marketing Tool",
+                    page_icon='✅',
+                    layout='centered',
+                    initial_sidebar_state='collapsed')
+st.header("Hey, How can I help you?")
+
+form_input = st.text_area('Enter text', height=275)
+
+tasktype_option = st.selectbox(
+    'Please select the action to be performed?',
+    ('Write a sales copy', 'Create a tweet', 'Write a product description'),key=1)
+
+age_option= st.selectbox(
+    'For which age group?',
+    ('Kid', 'Adult', 'senior Citizen'),key=2)
+
+numberOfWords= st.slider('Words limit', 1, 200, 25)
+
+submit = st.button("Generate")
+
+if submit:
+    st.write(getLLMResponse(form_input,tasktype_option,age_option))
+
